@@ -36,4 +36,6 @@ autoMigratedSQLiteStoreFileName:(NSString *)storeFileName
 + (NSManagedObjectContext *)mainContext;
 + (NSManagedObjectContext *)newChildContextWithPrivateQueue;
 
++ (NSPersistentStoreCoordinator *)persistentStoreCoordinator;
+
 @end
