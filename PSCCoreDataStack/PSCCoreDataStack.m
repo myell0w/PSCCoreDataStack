@@ -26,7 +26,7 @@ static NSManagedObjectContext *psc_privateContext = nil;
             configuration:(NSString *)configuration
                   options:(NSDictionary *)options
                   success:(void(^)())successBlock
-                    error:(void(^)(NSError *error))errorBlock {
+                    error:(void(^)(NSError *error, NSURL *URL))errorBlock {
 
     NSParameterAssert(modelURL != nil);
     NSParameterAssert([storeType isEqualToString:NSSQLiteStoreType] || [storeType isEqualToString:NSBinaryStoreType] || [storeType isEqualToString:NSInMemoryStoreType]);
@@ -66,7 +66,7 @@ static NSManagedObjectContext *psc_privateContext = nil;
 
             if (errorBlock != nil) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    errorBlock(error);
+                    errorBlock(error, storeURL);
                 });
             }
         } else {
@@ -77,7 +77,7 @@ static NSManagedObjectContext *psc_privateContext = nil;
     });
 }
 
-+ (void)setupWithModelURL:(NSURL *)modelURL autoMigratedSQLiteStoreFileName:(NSString *)storeFileName success:(void(^)())successBlock error:(void(^)(NSError *error))errorBlock {
++ (void)setupWithModelURL:(NSURL *)modelURL autoMigratedSQLiteStoreFileName:(NSString *)storeFileName success:(void(^)())successBlock error:(void(^)(NSError *error, NSURL *URL))errorBlock {
     NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption: @(YES), NSInferMappingModelAutomaticallyOption: @(YES)};
 
     [self setupWithModelURL:modelURL

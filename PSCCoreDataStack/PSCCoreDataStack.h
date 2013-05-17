@@ -23,11 +23,12 @@
             configuration:(NSString *)configuration
                   options:(NSDictionary *)options
                   success:(void(^)())successBlock
-                    error:(void(^)(NSError *error))errorBlock;
+                    error:(void(^)(NSError *error, NSURL *URL))errorBlock;
 
 + (void)setupWithModelURL:(NSURL *)modelURL
 autoMigratedSQLiteStoreFileName:(NSString *)storeFileName
-                  success:(void(^)())successBlock error:(void(^)(NSError *error))errorBlock;
+                  success:(void(^)())successBlock
+                    error:(void(^)(NSError *error, NSURL *URL))errorBlock;
 
 + (void)saveAndPersistContextBlocking:(BOOL)wait;
 + (void)saveAndPersistContext;
