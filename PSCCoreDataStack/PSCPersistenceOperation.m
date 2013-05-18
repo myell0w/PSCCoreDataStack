@@ -24,17 +24,34 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
 + (instancetype)operationWithParentContext:(NSManagedObjectContext *)parentContext
                                      block:(psc_persistence_block)block
                                 completion:(dispatch_block_t)completion {
-    NSParameterAssert(parentContext != nil);
     NSParameterAssert(block != nil);
 
-    PSCPersistenceOperation *operation = [[self alloc] init];
+    PSCPersistenceOperation *operation = [[self alloc] initWithParentContext:parentContext];
 
-    operation.parentContext = parentContext;
     operation.persistenceBlock = block;
     operation.completionBlock = completion;
 
     return operation;
 }
+
+- (instancetype)initWithParentContext:(NSManagedObjectContext *)parentContext {
+    NSParameterAssert(parentContext != nil);
+
+    if ((self = [super init])) {
+        _parentContext = parentContext;
+    }
+
+    return self;
+}
+
+- (id)init {
+    NSAssert(NO, @"Unable to create with plain init, use initWithParentContext: instead");
+    return nil;
+}
+
+////////////////////////////////////////////////////////////////////////
+#pragma mark - Class Methods
+////////////////////////////////////////////////////////////////////////
 
 + (void)persistDataInBackgroundWithParentContext:(NSManagedObjectContext *)parentContext
                                            block:(psc_persistence_block)block

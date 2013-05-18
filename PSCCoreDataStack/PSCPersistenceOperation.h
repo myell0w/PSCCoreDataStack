@@ -32,6 +32,9 @@ dispatch_queue_t psc_persistence_queue(void);
                                      block:(psc_persistence_block)block
                                 completion:(dispatch_block_t)completion;
 
+/** The designated initializer */
+- (instancetype)initWithParentContext:(NSManagedObjectContext *)parentContext;
+
 /** Subclasses can override to perform a persistence action */
 - (BOOL)persistWithContext:(NSManagedObjectContext *)localContext;
 - (void)willSaveContext:(NSManagedObjectContext *)localContext;
