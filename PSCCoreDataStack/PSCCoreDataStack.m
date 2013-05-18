@@ -12,12 +12,13 @@
 
 static NSManagedObjectContext *psc_mainContext = nil;
 static NSManagedObjectContext *psc_privateContext = nil;
+static NSURL *psc_storeDirectoryURL = nil;
 
 
 @implementation PSCCoreDataStack
 
 ////////////////////////////////////////////////////////////////////////
-#pragma mark - Life Cycle
+#pragma mark - Setup
 ////////////////////////////////////////////////////////////////////////
 
 + (void)setupWithModelURL:(NSURL *)modelURL
@@ -47,24 +48,19 @@ static NSManagedObjectContext *psc_privateContext = nil;
     psc_mainContext.parentContext = psc_privateContext;
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSURL *storeURL = nil;
-
-        if (storeFileName != nil) {
-            storeURL = [[[NSFileManager new] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
-            storeURL = [storeURL URLByAppendingPathComponent:storeFileName];
-        }
-
         NSError *error = nil;
-        NSPersistentStore *store = [persistentStoreCoordinator addPersistentStoreWithType:storeType
-                                                                            configuration:configuration
-                                                                                      URL:storeURL
-                                                                                  options:options
-                                                                                    error:&error];
+        NSPersistentStore *store = [self addPersistentStoreWithFileName:storeFileName
+                                                                   type:storeType
+                                                          configuration:configuration
+                                                                options:options
+                                                                  error:&error];
 
         if (store == nil) {
             PSCCDLog(@"Error adding persistent store to coordinator %@\n%@", [error localizedDescription], [error userInfo]);
 
             if (errorBlock != nil) {
+                NSURL *storeURL = [self storeURLWithFileName:storeFileName];
+                
                 dispatch_async(dispatch_get_main_queue(), ^{
                     errorBlock(error, storeURL);
                 });
@@ -89,19 +85,44 @@ static NSManagedObjectContext *psc_privateContext = nil;
                       error:errorBlock];
 }
 
++ (NSPersistentStore *)addPersistentStoreWithFileName:(NSString *)storeFileName
+                                                 type:(NSString *)storeType
+                                        configuration:(NSString *)configuration
+                                              options:(NSDictionary *)options
+                                                error:(NSError **)error {
+
+    NSURL *storeURL = [self storeURLWithFileName:storeFileName];
+    NSPersistentStore *store = [[self persistentStoreCoordinator] addPersistentStoreWithType:storeType
+                                                                               configuration:configuration
+                                                                                         URL:storeURL
+                                                                                     options:options
+                                                                                       error:error];
+
+    if (store == nil) {
+        PSCCDLog(@"Error adding persistent store to coordinator %@\n%@", [error localizedDescription], [error userInfo]);
+
+    }
+
+    return store;
+}
+
 ////////////////////////////////////////////////////////////////////////
 #pragma mark - Saving
 ////////////////////////////////////////////////////////////////////////
 
-+ (void)saveAndPersistContextBlocking:(BOOL)wait {
++ (BOOL)saveAndPersistContextBlocking:(BOOL)wait {
     NSError *error = nil;
 
-    [[self mainContext] saveAndPropagateToParentContextBlocking:wait error:&error];
-    NSAssert(error == nil, @"Error saving context %@ %@\n%@", psc_mainContext, [error localizedDescription], [error userInfo]);
+    if (![[self mainContext] saveAndPropagateToParentContextBlocking:wait error:&error]) {
+        PSCCDLog(@"Error saving context %@ %@\n%@", psc_mainContext, [error localizedDescription], [error userInfo]);
+        return NO;
+    }
+
+    return YES;
 }
 
-+ (void)saveAndPersistContext {
-    [self saveAndPersistContextBlocking:NO];
++ (BOOL)saveAndPersistContext {
+    return [self saveAndPersistContextBlocking:NO];
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -118,6 +139,22 @@ static NSManagedObjectContext *psc_privateContext = nil;
 
 + (NSPersistentStoreCoordinator *)persistentStoreCoordinator {
     return psc_privateContext.persistentStoreCoordinator;
+}
+
+////////////////////////////////////////////////////////////////////////
+#pragma mark - Private
+////////////////////////////////////////////////////////////////////////
+
++ (NSURL *)storeURLWithFileName:(NSString *)fileName {
+    if (fileName == nil) {
+        return nil;
+    } else {
+        if (psc_storeDirectoryURL == nil) {
+            psc_storeDirectoryURL = [[[NSFileManager new] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
+        }
+        
+        return [psc_storeDirectoryURL URLByAppendingPathComponent:fileName];
+    }
 }
 
 @end
