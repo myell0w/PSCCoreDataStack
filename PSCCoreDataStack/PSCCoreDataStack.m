@@ -13,6 +13,7 @@
 static NSManagedObjectContext *psc_mainContext = nil;
 static NSManagedObjectContext *psc_privateContext = nil;
 static NSURL *psc_storeDirectoryURL = nil;
+static NSPersistentStore *psc_defaultStore = nil;
 
 
 @implementation PSCCoreDataStack
@@ -49,13 +50,13 @@ static NSURL *psc_storeDirectoryURL = nil;
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSError *error = nil;
-        NSPersistentStore *store = [self addPersistentStoreWithFileName:storeFileName
+        psc_defaultStore = [self addPersistentStoreWithFileName:storeFileName
                                                                    type:storeType
                                                           configuration:configuration
                                                                 options:options
                                                                   error:&error];
 
-        if (store == nil) {
+        if (psc_defaultStore == nil) {
             PSCCDLog(@"Error adding persistent store to coordinator %@\n%@", [error localizedDescription], [error userInfo]);
 
             if (errorBlock != nil) {
@@ -139,6 +140,10 @@ static NSURL *psc_storeDirectoryURL = nil;
 
 + (NSPersistentStoreCoordinator *)persistentStoreCoordinator {
     return psc_privateContext.persistentStoreCoordinator;
+}
+
++ (NSPersistentStore *)defaultStore {
+    return psc_defaultStore;
 }
 
 ////////////////////////////////////////////////////////////////////////
