@@ -7,6 +7,7 @@
 //
 
 #import "NSManagedObjectContext+PSCCoreDataHelper.h"
+#import "PSCLogging.h"
 
 
 @implementation NSManagedObjectContext (PSCCoreDataHelper)
@@ -45,7 +46,14 @@
         } else if (wait) {
             [self.parentContext performBlockAndWait:saveParent];
         } else {
-            [self.parentContext performBlock:saveParent];
+            success = YES;
+            [self.parentContext performBlock:^{
+                // This get's executed asynchronously, so we don't use the error parameter or the success variable to not crash
+                NSError *saveError = nil;
+                if (![self.parentContext save:&saveError]) {
+                    PSCCDLog(@"Error persisting parent context: %@", saveError);
+                }
+            }];
         }
     }
 
