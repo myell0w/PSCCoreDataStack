@@ -24,6 +24,10 @@
 }
 
 + (instancetype)existingOrNewObjectWithAttribute:(NSString *)attribute matchingValue:(id)value inContext:(NSManagedObjectContext *)context {
+    return [self existingOrNewObjectWithAttribute:attribute matchingValue:value inContext:context store:nil];
+}
+
++ (instancetype)existingOrNewObjectWithAttribute:(NSString *)attribute matchingValue:(id)value inContext:(NSManagedObjectContext *)context store:(NSPersistentStore *)store {
     NSParameterAssert(attribute != nil);
     NSParameterAssert(context != nil);
 
@@ -31,21 +35,27 @@
 
     if (value != nil) {
         NSError *error = nil;
-        NSFetchRequest *request = [self requestFirstMatchingPredicate:[NSPredicate predicateWithFormat:@"%K = %@", attribute, value]
-                                                                error:&error];
+        NSFetchRequest *request = [self requestFirstMatchingPredicate:[NSPredicate predicateWithFormat:@"%K = %@", attribute, value] error:&error];
 
         if (request == nil) {
             PSCCDLog(@"Error fetching first object: %@ - %@", [error localizedDescription], [error userInfo]);
         } else {
+            if (store != nil) {
+                request.affectedStores = @[store];
+            }
             object = [[context executeFetchRequest:request error:&error] lastObject];
         }
     }
 
     if (object == nil) {
         object = [[self class] newObjectInContext:context];
+        if (store != nil) {
+            [context assignObject:object toPersistentStore:store];
+        }
+        
         [object setValue:value forKey:attribute];
     }
-
+    
     return object;
 }
 
@@ -109,14 +119,25 @@
     return [self fetchAllMatchingPredicate:predicate requestConfiguration:nil inContext:context error:error];
 }
 
-+ (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error {
++ (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate
+                       requestConfiguration:(psc_request_block)requestConfigurationBlock
+                                  inContext:(NSManagedObjectContext *)context
+                                      error:(NSError **)error {
     NSFetchRequest *fetchRequest = [self requestFirstMatchingPredicate:predicate error:error];
 
     if (fetchRequest != nil) {
+        if (requestConfigurationBlock != nil) {
+            requestConfigurationBlock(fetchRequest);
+        }
+        
         return [[context executeFetchRequest:fetchRequest error:error] lastObject];
     } else {
         return nil;
     }
+}
+
++ (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error {
+    return [self fetchFirstMatchingPredicate:predicate requestConfiguration:nil inContext:context error:error];
 }
 
 + (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(__autoreleasing NSError **)error {

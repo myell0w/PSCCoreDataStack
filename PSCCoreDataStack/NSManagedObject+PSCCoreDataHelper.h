@@ -19,6 +19,7 @@ typedef void(^psc_request_block)(NSFetchRequest *fetchRequest);
 
 + (instancetype)newObjectInContext:(NSManagedObjectContext *)context;
 + (instancetype)existingOrNewObjectWithAttribute:(NSString *)attribute matchingValue:(id)value inContext:(NSManagedObjectContext *)context;
++ (instancetype)existingOrNewObjectWithAttribute:(NSString *)attribute matchingValue:(id)value inContext:(NSManagedObjectContext *)context store:(NSPersistentStore *)store;
 
 + (NSUInteger)deleteAllMatchingPredicate:(NSPredicate *)predicate
                     requestConfiguration:(psc_request_block)requestConfigurationBlock
@@ -34,6 +35,11 @@ typedef void(^psc_request_block)(NSFetchRequest *fetchRequest);
                              inContext:(NSManagedObjectContext *)context
                                  error:(NSError **)error;
 + (NSArray *)fetchAllMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error;
+
++ (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate
+                       requestConfiguration:(psc_request_block)requestConfigurationBlock
+                                  inContext:(NSManagedObjectContext *)context
+                                      error:(NSError **)error;
 + (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error;
 
 + (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error;
