@@ -11,7 +11,7 @@
 
 - (NSManagedObjectContext *)newChildContextWithConcurrencyType:(NSUInteger)concurrencyType;
 
-- (BOOL)saveAndPropagateToParentContextBlocking:(BOOL)wait error:(NSError **)error;
-- (BOOL)saveAndPropagateToParentContext:(NSError **)error;
+- (void)saveAndPropagateToParentContextBlocking:(BOOL)wait;
+- (void)saveAndPropagateToParentContext;
 
 @end

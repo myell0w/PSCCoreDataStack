@@ -19,49 +19,41 @@
     return childContext;
 }
 
-- (BOOL)saveAndPropagateToParentContextBlocking:(BOOL)wait error:(__autoreleasing NSError **)error {
-    __block BOOL success = NO;
+- (void)saveAndPropagateToParentContextBlocking:(BOOL)wait {
+    void(^saveContext)(NSManagedObjectContext *) = ^(NSManagedObjectContext *context) {
+        NSError *error = nil;
+        if (![context save:&error]) {
+            PSCCDLog(@"Error saving context: %@", error);
+        }
+    };
 
     if (self.hasChanges) {
         if (self.concurrencyType == NSConfinementConcurrencyType) {
-            success = [self save:error];
+            saveContext(self);
         } else {
             [self performBlockAndWait:^{
-                success = [self save:error];
+                saveContext(self);
             }];
         }
-    }
-    
-    if (!success) {
-        return NO;
     }
     
     if (self.parentContext.hasChanges) {
-        dispatch_block_t saveParent = ^{
-            success = [self.parentContext save:error];
-        };
-        
         if (self.parentContext.concurrencyType == NSConfinementConcurrencyType) {
-            saveParent();
+            saveContext(self.parentContext);
         } else if (wait) {
-            [self.parentContext performBlockAndWait:saveParent];
+            [self.parentContext performBlockAndWait:^{
+                saveContext(self.parentContext);
+            }];
         } else {
-            success = YES;
             [self.parentContext performBlock:^{
-                // This get's executed asynchronously, so we don't use the error parameter or the success variable to not crash
-                NSError *saveError = nil;
-                if (![self.parentContext save:&saveError]) {
-                    PSCCDLog(@"Error persisting parent context: %@", saveError);
-                }
+                saveContext(self.parentContext);
             }];
         }
     }
-
-    return success;
 }
 
-- (BOOL)saveAndPropagateToParentContext:(__autoreleasing NSError **)error {
-    return [self saveAndPropagateToParentContextBlocking:NO error:error];
+- (void)saveAndPropagateToParentContext {
+    [self saveAndPropagateToParentContextBlocking:NO];
 }
 
 @end
