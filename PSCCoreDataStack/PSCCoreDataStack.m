@@ -111,19 +111,12 @@ static NSPersistentStore *psc_defaultStore = nil;
 #pragma mark - Saving
 ////////////////////////////////////////////////////////////////////////
 
-+ (BOOL)saveAndPersistContextBlocking:(BOOL)wait {
-    NSError *error = nil;
-
-    if (![[self mainContext] saveAndPropagateToParentContextBlocking:wait error:&error]) {
-        PSCCDLog(@"Error saving context %@ %@\n%@", psc_mainContext, [error localizedDescription], [error userInfo]);
-        return NO;
-    }
-
-    return YES;
++ (void)saveAndPersistContextBlocking:(BOOL)wait {
+    [[self mainContext] saveAndPropagateToParentContextBlocking:wait];
 }
 
-+ (BOOL)saveAndPersistContext {
-    return [self saveAndPersistContextBlocking:NO];
++ (void)saveAndPersistContext {
+    [self saveAndPersistContextBlocking:NO];
 }
 
 ////////////////////////////////////////////////////////////////////////

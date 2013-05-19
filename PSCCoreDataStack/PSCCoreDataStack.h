@@ -30,8 +30,8 @@ autoMigratedSQLiteStoreFileName:(NSString *)storeFileName
                   success:(void(^)())successBlock
                     error:(void(^)(NSError *error, NSURL *URL))errorBlock;
 
-+ (BOOL)saveAndPersistContextBlocking:(BOOL)wait;
-+ (BOOL)saveAndPersistContext;
++ (void)saveAndPersistContextBlocking:(BOOL)wait;
++ (void)saveAndPersistContext;
 
 + (NSPersistentStore *)addPersistentStoreWithFileName:(NSString *)storeFileName
                                                  type:(NSString *)storeType
