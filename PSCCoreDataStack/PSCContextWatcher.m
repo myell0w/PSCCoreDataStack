@@ -37,6 +37,11 @@
                                                  selector:@selector(contextDidSave:)
                                                      name:NSManagedObjectContextDidSaveNotification
                                                    object:_contextToWatch];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(objectsDidChange:)
+                                                     name:NSManagedObjectContextObjectsDidChangeNotification
+                                                   object:_contextToWatch];
     }
     
     return self;
@@ -44,6 +49,7 @@
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextDidSaveNotification object:_contextToWatch];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextObjectsDidChangeNotification object:_contextToWatch];
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,29 +94,37 @@
     }
 }
 
-////////////////////////////////////////////////////////////////////////
-#pragma mark - NSNotification
-////////////////////////////////////////////////////////////////////////
-
-- (void)contextDidSave:(NSNotification *)notification {
+- (void)handleNotification:(NSNotification *)notification {
     if (self.masterPredicate == nil) {
         return;
     }
 
     NSMutableSet *inserted = [[[notification userInfo] objectForKey:NSInsertedObjectsKey] mutableCopy];
     [inserted filterUsingPredicate:[self masterPredicate]];
-    
+
     NSMutableSet *deleted = [[[notification userInfo] objectForKey:NSDeletedObjectsKey] mutableCopy];
     [deleted filterUsingPredicate:[self masterPredicate]];
-    
+
     NSMutableSet *updated = [[[notification userInfo] objectForKey:NSUpdatedObjectsKey] mutableCopy];
     [updated filterUsingPredicate:[self masterPredicate]];
-    
+
     if ((inserted.count + deleted.count + updated.count) == 0) {
         return;
     }
-    
+
     [self.delegate contextWatcher:self observedInsertions:inserted deletions:deleted updates:updated inContext:self.contextToWatch];
+}
+
+////////////////////////////////////////////////////////////////////////
+#pragma mark - NSNotification
+////////////////////////////////////////////////////////////////////////
+
+- (void)contextDidSave:(NSNotification *)notification {
+    [self handleNotification:notification];
+}
+
+- (void)objectsDidChange:(NSNotification *)notification {
+    [self handleNotification:notification];
 }
 
 @end
