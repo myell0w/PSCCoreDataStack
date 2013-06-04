@@ -109,7 +109,26 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
 ////////////////////////////////////////////////////////////////////////
 
 - (void)main {
+    // There's a noticable performance penalty, when using Parent-Child Contexts to import data.
+    // http://floriankugler.com/blog/2013/4/29/concurrent-core-data-stack-performance-shootout
+    // By defining PSC_COREDATA_USE_INDEPENDENT_CONTEXTS_TO_IMPORT you can switch to the old way of using
+    // independent Managed Object Contexts and merging the changes.
+#ifdef PSC_COREDATA_USE_INDEPENDENT_CONTEXTS_TO_IMPORT
+    PSCCDLog(@"Using independent contexts to import");
+    NSAssert(self.parentContext == [PSCCoreDataStack mainContext], @"When using independent managed object contexts, the parent context must be [PSCCoreDataStack mainContext]");
+
+    NSManagedObjectContext *localContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSConfinementConcurrencyType];
+    localContext.persistentStoreCoordinator = self.parentContext.persistentStoreCoordinator;
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(managedObjectContextDidSave:)
+                                                 name:NSManagedObjectContextDidSaveNotification
+                                               object:localContext];
+#else
+    PSCCDLog(@"Using parent-child contexts to import");
     NSManagedObjectContext *localContext = [self.parentContext newChildContextWithConcurrencyType:NSConfinementConcurrencyType];
+#endif
+
     BOOL save = NO;
 
     // either persist via block (if set), or call method in subclass
@@ -121,7 +140,7 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
 
     if (save && localContext.hasChanges) {
         NSError *error = nil;
-        
+
         [self willSaveContext:localContext];
 
         if (![localContext save:&error]) {
@@ -133,6 +152,28 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
         [self didNotSaveContext:localContext];
     }
 }
+
+////////////////////////////////////////////////////////////////////////
+#pragma mark - NSNotification
+////////////////////////////////////////////////////////////////////////
+
+#ifdef PSC_COREDATA_USE_INDEPENDENT_CONTEXTS_TO_IMPORT
+- (void)managedObjectContextDidSave:(NSNotification *)notification {
+    NSManagedObjectContext *managedObjectContext = self.parentContext;
+
+    dispatch_block_t mergeChanges = ^{
+        [managedObjectContext mergeChangesFromContextDidSaveNotification:notification];
+    };
+
+    if ([NSThread isMainThread]) {
+        mergeChanges();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), mergeChanges);
+    }
+}
+#endif
+
+@end
 
 ////////////////////////////////////////////////////////////////////////
 #pragma mark - Functions
@@ -147,4 +188,3 @@ dispatch_queue_t psc_persistence_queue(void) {
     return _psc_persistence_queue;
 }
 
-@end
