@@ -46,11 +46,20 @@
 
 @property (nonatomic, readonly) NSIndexSet *deletedSectionIndexes;
 @property (nonatomic, readonly) NSIndexSet *insertedSectionIndexes;
+@property (nonatomic, readonly) NSIndexSet *updatedSectionIndexes; // only set when created manually
 
 @property (nonatomic, readonly) NSArray *deletedObjectIndexPaths;
 @property (nonatomic, readonly) NSArray *insertedObjectIndexPaths;
 @property (nonatomic, readonly) NSArray *updatedObjectIndexPaths;
 @property (nonatomic, readonly) NSArray *movedObjectIndexPaths; // only set if reportMovesAsInsertionsAndDeletions is NO
+
++ (instancetype)updaterWithDeletedSectionIndexes:(NSIndexSet *)deletedSectionIndexes
+                          insertedSectionIndexes:(NSIndexSet *)insertedSectionIndexes
+                           updatedSectionIndexes:(NSIndexSet *)updatedSectionIndexes
+                         deletedObjectIndexPaths:(NSArray *)deletedObjectIndexPaths
+                        insertedObjectIndexPaths:(NSArray *)insertedObjectIndexPaths
+                         updatedObjectIndexPaths:(NSArray *)updatedObjectIndexPaths
+                           movedObjectIndexPaths:(NSArray *)movedObjectIndexPaths;
 
 - (void)reset;
 - (void)resetSectionChanges;

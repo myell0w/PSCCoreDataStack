@@ -21,6 +21,7 @@
 @implementation PSCFetchedResultsControllerUpdater {
     NSMutableIndexSet *_insertedSectionIndexes;
     NSMutableIndexSet *_deletedSectionIndexes;
+    NSMutableIndexSet *_updatedSectionIndexes;
     NSMutableArray *_deletedObjectIndexPaths;
     NSMutableArray *_insertedObjectIndexPaths;
     NSMutableArray *_updatedObjectIndexPaths;
@@ -30,6 +31,30 @@
 ////////////////////////////////////////////////////////////////////////
 #pragma mark - Lifecycle
 ////////////////////////////////////////////////////////////////////////
+
++ (instancetype)updaterWithDeletedSectionIndexes:(NSIndexSet *)deletedSectionIndexes
+                          insertedSectionIndexes:(NSIndexSet *)insertedSectionIndexes
+                           updatedSectionIndexes:(NSIndexSet *)updatedSectionIndexes
+                         deletedObjectIndexPaths:(NSArray *)deletedObjectIndexPaths
+                        insertedObjectIndexPaths:(NSArray *)insertedObjectIndexPaths
+                         updatedObjectIndexPaths:(NSArray *)updatedObjectIndexPaths
+                           movedObjectIndexPaths:(NSArray *)movedObjectIndexPaths
+{
+    PSCFetchedResultsControllerUpdater *updater = [PSCFetchedResultsControllerUpdater new];
+
+    [updater reset];
+
+    [updater->_deletedSectionIndexes addIndexes:deletedSectionIndexes];
+    [updater->_insertedSectionIndexes addIndexes:insertedSectionIndexes];
+    [updater->_updatedSectionIndexes addIndexes:updatedSectionIndexes];
+
+    [updater->_deletedObjectIndexPaths addObjectsFromArray:deletedObjectIndexPaths];
+    [updater->_insertedObjectIndexPaths addObjectsFromArray:insertedObjectIndexPaths];
+    [updater->_updatedObjectIndexPaths addObjectsFromArray:updatedObjectIndexPaths];
+    [updater->_movedObjectIndexPaths addObjectsFromArray:movedObjectIndexPaths];
+
+    return updater;
+}
 
 - (id)init {
     if ((self = [super init])) {
@@ -51,6 +76,7 @@
 - (void)resetSectionChanges {
     _insertedSectionIndexes = [[NSMutableIndexSet alloc] init];
     _deletedSectionIndexes = [[NSMutableIndexSet alloc] init];
+    _updatedSectionIndexes = [[NSMutableIndexSet alloc] init];
 }
 
 - (void)resetObjectChanges {
@@ -65,7 +91,7 @@
 }
 
 - (NSUInteger)numberOfSectionChanges {
-    return ([self.deletedSectionIndexes count] + [self.insertedSectionIndexes count]);
+    return [self.deletedSectionIndexes count] + [self.insertedSectionIndexes count] + [self.updatedSectionIndexes count];
 }
 
 - (NSUInteger)numberOfObjectChanges {
