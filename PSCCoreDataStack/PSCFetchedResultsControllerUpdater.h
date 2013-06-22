@@ -65,6 +65,10 @@
 - (void)resetSectionChanges;
 - (void)resetObjectChanges;
 
+- (BOOL)containsOnlyDeletions;
+- (BOOL)containsOnlyInsertions;
+- (BOOL)containsOnlyUpdates;
+
 @end
 
 

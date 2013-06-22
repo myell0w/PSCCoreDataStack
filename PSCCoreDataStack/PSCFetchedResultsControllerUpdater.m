@@ -99,6 +99,33 @@
             [self.updatedObjectIndexPaths count] + [self.movedObjectIndexPaths count]);
 }
 
+- (BOOL)containsOnlyDeletions {
+    NSUInteger numberOfDeletions = self.deletedObjectIndexPaths.count + self.deletedSectionIndexes.count;
+    NSUInteger numberOfOtherOperations = (self.insertedObjectIndexPaths.count + self.insertedSectionIndexes.count +
+                                          self.updatedObjectIndexPaths.count + self.updatedSectionIndexes.count +
+                                          self.movedObjectIndexPaths.count);
+
+    return numberOfDeletions > 0 && numberOfOtherOperations == 0;
+}
+
+- (BOOL)containsOnlyInsertions {
+    NSUInteger numberOfInsertions = self.insertedObjectIndexPaths.count + self.insertedSectionIndexes.count;
+    NSUInteger numberOfOtherOperations = (self.deletedObjectIndexPaths.count + self.deletedSectionIndexes.count +
+                                          self.updatedObjectIndexPaths.count + self.updatedSectionIndexes.count +
+                                          self.movedObjectIndexPaths.count);
+
+    return numberOfInsertions > 0 && numberOfOtherOperations == 0;
+}
+
+- (BOOL)containsOnlyUpdates {
+    NSUInteger numberOfUpdates = self.updatedObjectIndexPaths.count + self.updatedSectionIndexes.count;
+    NSUInteger numberOfOtherOperations = (self.deletedObjectIndexPaths.count + self.deletedSectionIndexes.count +
+                                          self.insertedObjectIndexPaths.count + self.insertedSectionIndexes.count +
+                                          self.movedObjectIndexPaths.count);
+
+    return numberOfUpdates > 0 && numberOfOtherOperations == 0;
+}
+
 ////////////////////////////////////////////////////////////////////////
 #pragma mark - NSFetchedResultsControllerDelegate
 ////////////////////////////////////////////////////////////////////////
