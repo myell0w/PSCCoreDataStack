@@ -61,6 +61,9 @@
                          updatedObjectIndexPaths:(NSArray *)updatedObjectIndexPaths
                            movedObjectIndexPaths:(NSArray *)movedObjectIndexPaths;
 
+// can potentially create invalid updates, the user is responsible for creating only valid ones
+- (instancetype)unionWithUpdater:(PSCFetchedResultsControllerUpdater *)updater;
+
 - (void)reset;
 - (void)resetSectionChanges;
 - (void)resetObjectChanges;

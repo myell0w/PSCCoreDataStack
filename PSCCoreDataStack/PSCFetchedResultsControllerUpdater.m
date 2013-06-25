@@ -56,6 +56,24 @@
     return updater;
 }
 
+- (instancetype)unionWithUpdater:(PSCFetchedResultsControllerUpdater *)updater {
+    NSMutableIndexSet *deletedSectionIndexes = [self.deletedSectionIndexes mutableCopy];
+    NSMutableIndexSet *insertedSectionIndexes = [self.insertedSectionIndexes mutableCopy];
+    NSMutableIndexSet *updatedSectionIndexes = [self.updatedSectionIndexes mutableCopy];
+
+    [deletedSectionIndexes addIndexes:updater.deletedSectionIndexes];
+    [insertedSectionIndexes addIndexes:updater.insertedSectionIndexes];
+    [updatedSectionIndexes addIndexes:updater.updatedSectionIndexes];
+
+    return [[self class] updaterWithDeletedSectionIndexes:deletedSectionIndexes
+                                   insertedSectionIndexes:insertedSectionIndexes
+                                    updatedSectionIndexes:updatedSectionIndexes
+                                  deletedObjectIndexPaths:[self.deletedObjectIndexPaths arrayByAddingObjectsFromArray:updater.deletedObjectIndexPaths]
+                                 insertedObjectIndexPaths:[self.insertedObjectIndexPaths arrayByAddingObjectsFromArray:updater.insertedObjectIndexPaths]
+                                  updatedObjectIndexPaths:[self.updatedObjectIndexPaths arrayByAddingObjectsFromArray:updater.updatedObjectIndexPaths]
+                                    movedObjectIndexPaths:[self.movedObjectIndexPaths arrayByAddingObjectsFromArray:updater.movedObjectIndexPaths]];
+}
+
 - (id)init {
     if ((self = [super init])) {
         _reportMovesAsInsertionsAndDeletions = YES;
@@ -198,7 +216,7 @@
             [_deletedSectionIndexes addIndex:sectionIndex];
             break;
         }
-
+            
         default: {
             // Shouldn't have a default
             break;
