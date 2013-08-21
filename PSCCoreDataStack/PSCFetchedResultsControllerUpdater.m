@@ -83,6 +83,21 @@
 }
 
 ////////////////////////////////////////////////////////////////////////
+#pragma mark - NSObject
+////////////////////////////////////////////////////////////////////////
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<PSCFRCUpdater\n  deleted section: %@\n  inserted sections: %@\n  updated sections: %@\n  deleted objects: %d\n  inserted objects: %d\n  updated objects: %d\n  moved objecsts: %d>",
+            self.deletedSectionIndexes,
+            self.insertedSectionIndexes,
+            self.updatedSectionIndexes,
+            self.deletedObjectIndexPaths.count,
+            self.insertedObjectIndexPaths.count,
+            self.updatedObjectIndexPaths.count,
+            self.movedObjectIndexPaths.count];
+}
+
+////////////////////////////////////////////////////////////////////////
 #pragma mark - PSCFetchedResultsControllerUpdater
 ////////////////////////////////////////////////////////////////////////
 
