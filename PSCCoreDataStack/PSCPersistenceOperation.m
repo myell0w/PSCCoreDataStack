@@ -109,6 +109,11 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
 ////////////////////////////////////////////////////////////////////////
 
 - (void)main {
+    if (self.parentContext == nil) {
+        [self didFailToSaveContext:nil error:nil];
+        return;
+    }
+
     // There's a noticable performance penalty, when using Parent-Child Contexts to import data.
     // http://floriankugler.com/blog/2013/4/29/concurrent-core-data-stack-performance-shootout
     // By defining PSC_COREDATA_USE_INDEPENDENT_CONTEXTS_TO_IMPORT you can switch to the old way of using
