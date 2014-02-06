@@ -43,6 +43,9 @@ typedef void(^psc_request_block)(NSFetchRequest *fetchRequest);
 + (instancetype)fetchFirstMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error;
 
 + (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(NSError **)error;
++ (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate
+                         requestConfiguration:(psc_request_block)requestConfigurationBlock
+                                    inContext:(NSManagedObjectContext *)context error:(NSError **)error;
 
 /**
  High-level action to update the data in Core Data based on an array of dictionaries.

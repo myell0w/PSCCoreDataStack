@@ -122,7 +122,7 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
     PSCCDLog(@"Using independent contexts to import");
     NSAssert(self.parentContext == [PSCCoreDataStack mainContext], @"When using independent managed object contexts, the parent context must be [PSCCoreDataStack mainContext]");
 
-    NSManagedObjectContext *localContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSConfinementConcurrencyType];
+    NSManagedObjectContext *localContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     localContext.persistentStoreCoordinator = self.parentContext.persistentStoreCoordinator;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -131,31 +131,33 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
                                                object:localContext];
 #else
     PSCCDLog(@"Using parent-child contexts to import");
-    NSManagedObjectContext *localContext = [self.parentContext newChildContextWithConcurrencyType:NSConfinementConcurrencyType];
+    NSManagedObjectContext *localContext = [self.parentContext newChildContextWithConcurrencyType:NSPrivateQueueConcurrencyType];
 #endif
 
-    BOOL save = NO;
-
     // either persist via block (if set), or call method in subclass
-    if (self.persistenceBlock != nil) {
-        save = self.persistenceBlock(localContext);
-    } else {
-        save = [self persistWithContext:localContext];
-    }
+    [localContext performBlockAndWait:^{
+        BOOL save = NO;
 
-    if (save && localContext.hasChanges) {
-        NSError *error = nil;
-
-        [self willSaveContext:localContext];
-
-        if (![localContext save:&error]) {
-            [self didFailToSaveContext:localContext error:error];
+        if (self.persistenceBlock != nil) {
+            save = self.persistenceBlock(localContext);
         } else {
-            [self didSaveContext:localContext];
+            save = [self persistWithContext:localContext];
         }
-    } else {
-        [self didNotSaveContext:localContext];
-    }
+
+        if (save && localContext.hasChanges) {
+            NSError *error = nil;
+
+            [self willSaveContext:localContext];
+
+            if (![localContext save:&error]) {
+                [self didFailToSaveContext:localContext error:error];
+            } else {
+                [self didSaveContext:localContext];
+            }
+        } else {
+            [self didNotSaveContext:localContext];
+        }
+    }];
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -141,9 +141,18 @@
 }
 
 + (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context error:(__autoreleasing NSError **)error {
-	NSFetchRequest *request = [self requestAllMatchingPredicate:predicate error:error];
+    return [self countOfObjectsMatchingPredicate:predicate requestConfiguration:nil inContext:context error:error];
+}
+
++ (NSUInteger)countOfObjectsMatchingPredicate:(NSPredicate *)predicate
+                         requestConfiguration:(psc_request_block)requestConfigurationBlock
+                                    inContext:(NSManagedObjectContext *)context error:(NSError **)error {
+    NSFetchRequest *request = [self requestAllMatchingPredicate:predicate error:error];
 
     if (request != nil) {
+        if (requestConfigurationBlock != nil) {
+            requestConfigurationBlock(request);
+        }
         return [context countForFetchRequest:request error:error];
     } else {
         return 0;
@@ -169,7 +178,9 @@
     NSUInteger deletedObjectsCount = 0, insertedObjectsCount = 0, updatedObjectsCount = 0;
 
     // get all IDs of the entities in the dictionary (new data)
-    NSArray *entityIDs = [data valueForKeyPath:dictionaryIDKeyPath] ?: [NSArray array];
+    NSArray *entityIDs = [data valueForKeyPath:dictionaryIDKeyPath] ?: [NSArray new];
+    // Use a dictionary to access the data entries by their ID in O(1)
+    NSDictionary *dataDictionary = entityIDs.count > 0 ? [NSDictionary dictionaryWithObjects:data forKeys:entityIDs] : [NSDictionary new];
 
 
     // remove all entities that are not in the new data set
@@ -205,13 +216,11 @@
         insertedObjectsCount = newEntityIDs.count;
     }
 
+
     // update entities that are already present in database
     for (id entityToUpdate in entitiesAlreadyInDatabase) {
         // get corresponding data-dictionary for entity to update
-        NSArray *entityToUpdateDictionaries = [data filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"%K = %@",
-                                                                                 dictionaryIDKeyPath,
-                                                                                 [entityToUpdate valueForKey:databaseIDKey]]];
-        NSDictionary *entityToUpdateDictionary = [entityToUpdateDictionaries lastObject]; // should only be one anyway
+        NSDictionary *entityToUpdateDictionary = dataDictionary[[entityToUpdate valueForKey:databaseIDKey]];
 
         updateBlock(entityToUpdate, entityToUpdateDictionary);
     }
@@ -219,13 +228,11 @@
     // insert entities not yet in database
     for (id newEntityID in newEntityIDs) {
         // get data-dictionary of new entity to insert
-        NSArray *newEntityDictionaries = [data filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"%K = %@",
-                                                                            dictionaryIDKeyPath,
-                                                                            newEntityID]];
-        NSDictionary *newEntityDictionary = [newEntityDictionaries lastObject]; // should only be one anyway
-        id newEntity = [self newObjectInContext:context];
+        NSDictionary *newEntityDictionary = dataDictionary[newEntityID];
 
+        id newEntity = [self newObjectInContext:context];
         [newEntity setValue:newEntityID forKey:databaseIDKey];
+
         updateBlock(newEntity, newEntityDictionary);
     }
 
