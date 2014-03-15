@@ -87,14 +87,14 @@
 ////////////////////////////////////////////////////////////////////////
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<PSCFRCUpdater\n  deleted section: %@\n  inserted sections: %@\n  updated sections: %@\n  deleted objects: %d\n  inserted objects: %d\n  updated objects: %d\n  moved objecsts: %d>",
+    return [NSString stringWithFormat:@"<PSCFRCUpdater\n  deleted section: %@\n  inserted sections: %@\n  updated sections: %@\n  deleted objects: %ld\n  inserted objects: %ld\n  updated objects: %ld\n  moved objecsts: %ld>",
             self.deletedSectionIndexes,
             self.insertedSectionIndexes,
             self.updatedSectionIndexes,
-            self.deletedObjectIndexPaths.count,
-            self.insertedObjectIndexPaths.count,
-            self.updatedObjectIndexPaths.count,
-            self.movedObjectIndexPaths.count];
+            (unsigned long)self.deletedObjectIndexPaths.count,
+            (unsigned long)self.insertedObjectIndexPaths.count,
+            (unsigned long)self.updatedObjectIndexPaths.count,
+            (unsigned long)self.movedObjectIndexPaths.count];
 }
 
 ////////////////////////////////////////////////////////////////////////
