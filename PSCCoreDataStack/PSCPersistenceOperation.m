@@ -62,11 +62,9 @@ static dispatch_queue_t _psc_persistence_queue = NULL;
     dispatch_async(psc_persistence_queue(), ^{
         NSManagedObjectContext *localContext = [parentContext newChildContextWithConcurrencyType:NSPrivateQueueConcurrencyType];
 
-        if (block != nil) {
-            block(localContext);
-        }
-
         [localContext performBlockAndWait:^{
+            block(localContext);
+
             NSError *error = nil;
             if (![localContext save:&error]) {
                 PSCCDLog(@"Error persisting local context in PSCPersistenceAction: %@", error);

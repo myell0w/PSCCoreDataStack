@@ -57,6 +57,10 @@
 }
 
 - (instancetype)unionWithUpdater:(PSCFetchedResultsControllerUpdater *)updater {
+    if (updater == nil) {
+        return self;
+    }
+    
     NSMutableIndexSet *deletedSectionIndexes = [self.deletedSectionIndexes mutableCopy];
     NSMutableIndexSet *insertedSectionIndexes = [self.insertedSectionIndexes mutableCopy];
     NSMutableIndexSet *updatedSectionIndexes = [self.updatedSectionIndexes mutableCopy];
